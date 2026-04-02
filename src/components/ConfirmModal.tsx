@@ -1,19 +1,37 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 interface Props {
+  open: boolean;
+  title: string;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export default function ConfirmModal({ message, onConfirm, onCancel }: Props) {
+export default function ConfirmModal({ open, title, message, onConfirm, onCancel }: Props) {
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <p>{message}</p>
-        <div className="modal-actions">
-          <button className="cancel-btn" onClick={onCancel}>Annuler</button>
-          <button className="danger-btn" onClick={onConfirm}>Supprimer</button>
-        </div>
-      </div>
-    </div>
+    <AlertDialog open={open} onOpenChange={v => { if (!v) onCancel(); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{message}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

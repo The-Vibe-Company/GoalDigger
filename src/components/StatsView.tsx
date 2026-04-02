@@ -1,4 +1,7 @@
 import { Goal } from '../types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface Props {
   goals: Goal[];
@@ -37,54 +40,58 @@ export default function StatsView({ goals, onBack }: Props) {
   const streak = getStreak(goals);
   const totalActions = goals.reduce((sum, g) => sum + g.history.length, 0);
 
+  const stats = [
+    { value: goals.length, label: 'Objectifs', icon: '🎯' },
+    { value: active.length, label: 'En cours', icon: '⚡' },
+    { value: completed.length, label: 'Termines', icon: '✅' },
+    { value: `${avgProgress}%`, label: 'Moy. progression', icon: '📊' },
+    { value: streak, label: 'Jours de streak', icon: '🔥', accent: true },
+    { value: totalActions, label: 'Actions totales', icon: '💪' },
+  ];
+
   return (
-    <div className="stats-view">
-      <div className="stats-header">
-        <button className="back-btn" onClick={onBack}>← Retour</button>
-        <h2>Statistiques</h2>
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Retour
+        </Button>
+        <h2 className="text-lg font-bold">Statistiques</h2>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span className="stat-value">{goals.length}</span>
-          <span className="stat-label">Objectifs</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{active.length}</span>
-          <span className="stat-label">En cours</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{completed.length}</span>
-          <span className="stat-label">Completes</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{avgProgress}%</span>
-          <span className="stat-label">Moy. progression</span>
-        </div>
-        <div className="stat-card accent">
-          <span className="stat-value">{streak}🔥</span>
-          <span className="stat-label">Jours de streak</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{totalActions}</span>
-          <span className="stat-label">Actions totales</span>
-        </div>
+      <div className="grid grid-cols-2 gap-3">
+        {stats.map(s => (
+          <Card key={s.label} className={s.accent ? 'border-orange-500/50' : ''}>
+            <CardContent className="p-4 text-center">
+              <span className="text-2xl">{s.icon}</span>
+              <p className="text-2xl font-bold mt-1">{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {goals.length > 0 && (
-        <div className="stats-breakdown">
-          <h3>Par objectif</h3>
-          {goals.map(g => {
-            const pct = Math.min(100, Math.round((g.progress / g.target) * 100));
-            return (
-              <div key={g.id} className="stat-row">
-                <span className="stat-row-emoji">{g.emoji}</span>
-                <span className="stat-row-title">{g.title}</span>
-                <span className="stat-row-pct" style={{ color: g.color }}>{pct}%</span>
-              </div>
-            );
-          })}
-        </div>
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <h3 className="font-semibold text-sm">Par objectif</h3>
+            {goals.map(g => {
+              const pct = Math.min(100, Math.round((g.progress / g.target) * 100));
+              return (
+                <div key={g.id} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">
+                      <span className="mr-1.5">{g.emoji}</span>
+                      {g.title}
+                    </span>
+                    <span className="text-xs font-bold" style={{ color: g.color }}>{pct}%</span>
+                  </div>
+                  <Progress value={pct} className="h-1.5" />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

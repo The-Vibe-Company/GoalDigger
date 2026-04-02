@@ -26,7 +26,7 @@ export default function Sparkline({ history, color, width = 120, height = 32 }: 
   });
 
   return (
-    <svg width={width} height={height} className="sparkline">
+    <svg width={width} height={height} className="opacity-70">
       <polyline
         fill="none"
         stroke={color}
@@ -34,7 +34,6 @@ export default function Sparkline({ history, color, width = 120, height = 32 }: 
         strokeLinecap="round"
         strokeLinejoin="round"
         points={points.join(' ')}
-        opacity="0.7"
       />
     </svg>
   );
