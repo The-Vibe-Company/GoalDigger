@@ -1,15 +1,5 @@
 export type GoalType = 'curve' | 'counter';
 
-export interface GoalTemplate {
-  id: string;
-  name: string;
-  type: GoalType;
-  icon: string; // lucide icon name
-  unit: string;
-  defaultTarget?: number;
-  color: string;
-}
-
 export interface Goal {
   id: string;
   name: string;

@@ -1,77 +1,144 @@
+import { neon } from '@/lib/client';
 import { Goal, CurveEntry, CounterEntry } from '@/types';
 
-const GOALS_KEY = 'goaldigger_goals';
-const ENTRIES_PREFIX = 'goaldigger_entries_';
+// ── Goals ──
 
-// Goals
-export function loadGoals(): Goal[] {
-  const raw = localStorage.getItem(GOALS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw); } catch { return []; }
+export async function loadGoals(): Promise<Goal[]> {
+  const { data, error } = await neon
+    .from('goals')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(rowToGoal);
 }
 
-export function saveGoals(goals: Goal[]): void {
-  localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+export async function addGoal(goal: Goal): Promise<void> {
+  const { error } = await neon.from('goals').insert({
+    id: goal.id,
+    name: goal.name,
+    type: goal.type,
+    unit: goal.unit,
+    icon: goal.icon,
+    color: goal.color,
+    target: goal.target,
+  });
+  if (error) throw error;
 }
 
-export function addGoal(goal: Goal): void {
-  const goals = loadGoals();
-  goals.push(goal);
-  saveGoals(goals);
+export async function deleteGoal(id: string): Promise<void> {
+  // Entries cascade-delete via FK
+  const { error } = await neon.from('goals').delete().eq('id', id);
+  if (error) throw error;
 }
 
-export function deleteGoal(id: string): void {
-  const goals = loadGoals().filter(g => g.id !== id);
-  saveGoals(goals);
-  localStorage.removeItem(ENTRIES_PREFIX + id);
+export async function updateGoal(id: string, updates: Partial<Goal>): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (updates.name !== undefined) row.name = updates.name;
+  if (updates.target !== undefined) row.target = updates.target;
+  if (updates.color !== undefined) row.color = updates.color;
+  if (updates.unit !== undefined) row.unit = updates.unit;
+  if (updates.icon !== undefined) row.icon = updates.icon;
+
+  const { error } = await neon.from('goals').update(row).eq('id', id);
+  if (error) throw error;
 }
 
-export function updateGoal(id: string, updates: Partial<Goal>): void {
-  const goals = loadGoals().map(g => g.id === id ? { ...g, ...updates } : g);
-  saveGoals(goals);
+// ── Entries ──
+
+export async function loadEntries<T extends CurveEntry | CounterEntry>(goalId: string): Promise<T[]> {
+  const { data, error } = await neon
+    .from('entries')
+    .select('*')
+    .eq('goal_id', goalId)
+    .order('date', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(r => rowToEntry<T>(r));
 }
 
-// Entries
-export function loadEntries<T extends CurveEntry | CounterEntry>(goalId: string): T[] {
-  const raw = localStorage.getItem(ENTRIES_PREFIX + goalId);
-  if (!raw) return [];
-  try { return JSON.parse(raw); } catch { return []; }
+export async function setCurveEntry(goalId: string, date: string, value: number): Promise<void> {
+  const { error } = await neon.from('entries').upsert(
+    { goal_id: goalId, date, value, count: null },
+    { onConflict: 'goal_id,date' },
+  );
+  if (error) throw error;
 }
 
-function saveEntries(goalId: string, entries: (CurveEntry | CounterEntry)[]): void {
-  localStorage.setItem(ENTRIES_PREFIX + goalId, JSON.stringify(entries));
-}
-
-// Curve: set value for a date (replace if exists)
-export function setCurveEntry(goalId: string, date: string, value: number): void {
-  const entries = loadEntries<CurveEntry>(goalId);
-  const idx = entries.findIndex(e => e.date === date);
-  if (idx >= 0) {
-    entries[idx].value = value;
-  } else {
-    entries.push({ date, value });
+export async function setCounterEntry(goalId: string, date: string, count: number): Promise<void> {
+  if (count <= 0) {
+    // Delete the entry if count is 0
+    await neon.from('entries').delete().eq('goal_id', goalId).eq('date', date);
+    return;
   }
-  entries.sort((a, b) => a.date.localeCompare(b.date));
-  saveEntries(goalId, entries);
+  const { error } = await neon.from('entries').upsert(
+    { goal_id: goalId, date, value: null, count },
+    { onConflict: 'goal_id,date' },
+  );
+  if (error) throw error;
 }
 
-// Counter: increment count for a date
-export function incrementCounter(goalId: string, date: string, delta = 1): void {
-  const entries = loadEntries<CounterEntry>(goalId);
-  const idx = entries.findIndex(e => e.date === date);
-  if (idx >= 0) {
-    entries[idx].count = Math.max(0, entries[idx].count + delta);
-  } else if (delta > 0) {
-    entries.push({ date, count: delta });
+export async function incrementCounter(goalId: string, date: string, delta: number): Promise<void> {
+  // Read current
+  const { data } = await neon
+    .from('entries')
+    .select('count')
+    .eq('goal_id', goalId)
+    .eq('date', date)
+    .maybeSingle();
+
+  const current = (data?.count as number) ?? 0;
+  const newCount = Math.max(0, current + delta);
+
+  if (data) {
+    const { error } = await neon
+      .from('entries')
+      .update({ count: newCount })
+      .eq('goal_id', goalId)
+      .eq('date', date);
+    if (error) throw error;
+  } else if (newCount > 0) {
+    const { error } = await neon.from('entries').insert({
+      goal_id: goalId,
+      date,
+      value: null,
+      count: newCount,
+    });
+    if (error) throw error;
   }
-  saveEntries(goalId, entries);
 }
 
-export function getCounterForDate(goalId: string, date: string): number {
-  const entries = loadEntries<CounterEntry>(goalId);
-  return entries.find(e => e.date === date)?.count ?? 0;
+export async function getCounterForDate(goalId: string, date: string): Promise<number> {
+  const { data } = await neon
+    .from('entries')
+    .select('count')
+    .eq('goal_id', goalId)
+    .eq('date', date)
+    .maybeSingle();
+  return (data?.count as number) ?? 0;
 }
 
 export function today(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+// ── Mappers ──
+
+function rowToGoal(r: Record<string, unknown>): Goal {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    type: r.type as Goal['type'],
+    unit: r.unit as string,
+    icon: r.icon as string,
+    color: r.color as string,
+    target: (r.target as number) ?? null,
+    createdAt: r.created_at as string,
+  };
+}
+
+function rowToEntry<T>(r: Record<string, unknown>): T {
+  const date = (r.date as string).slice(0, 10); // normalize to yyyy-MM-dd
+  if (r.value !== null && r.value !== undefined) {
+    return { date, value: r.value as number } as T;
+  }
+  return { date, count: (r.count as number) ?? 0 } as T;
 }
