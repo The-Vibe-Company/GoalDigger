@@ -141,8 +141,11 @@ export default function HomePage({ onSignOut }: Props) {
             </div>
           )}
 
-          {/* Bottom CTA */}
-          <div className="mt-10 pb-10">
+          {/* Bottom CTA - spacer */}
+          <div className="h-20" />
+
+          {/* Fixed bottom button */}
+          <div className="fixed bottom-5 left-4 right-4 z-50 max-w-[398px] mx-auto">
             <Button
               className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg"
               onClick={() => setView({ type: 'create' })}
