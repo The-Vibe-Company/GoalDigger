@@ -1,8 +1,12 @@
-import { UserButton } from '@neondatabase/neon-js/auth/react/ui';
 import { Separator } from '@/components/ui/separator';
-import { Pickaxe, Construction } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Pickaxe, LogOut, Construction } from 'lucide-react';
 
-export default function HomePage() {
+interface Props {
+  onSignOut: () => void;
+}
+
+export default function HomePage({ onSignOut }: Props) {
   return (
     <div className="min-h-dvh flex flex-col max-w-[430px] mx-auto px-4">
       <header className="flex items-center justify-between pt-6 pb-3">
@@ -10,7 +14,9 @@ export default function HomePage() {
           Goal<span className="text-primary">Digger</span>
           <Pickaxe className="w-4 h-4 text-primary" />
         </h1>
-        <UserButton />
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSignOut}>
+          <LogOut className="w-4 h-4" />
+        </Button>
       </header>
       <Separator />
 

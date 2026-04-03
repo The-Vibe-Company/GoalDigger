@@ -1,15 +1,58 @@
 import { useState } from 'react';
-import { AuthView } from '@neondatabase/neon-js/auth/react/ui';
+import { authClient } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pickaxe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Pickaxe, Loader2 } from 'lucide-react';
 
-export default function AuthPage() {
-  const [view, setView] = useState<'sign-in' | 'sign-up'>('sign-in');
+interface Props {
+  onSuccess: () => void;
+}
+
+export default function AuthPage({ onSuccess }: Props) {
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (mode === 'sign-in') {
+        const res = await authClient.signIn.email({ email, password });
+        if (res.error) {
+          setError(res.error.message ?? 'Erreur de connexion');
+        } else {
+          onSuccess();
+        }
+      } else {
+        const res = await authClient.signUp.email({
+          name: email.split('@')[0] || 'User',
+          email,
+          password,
+        });
+        if (res.error) {
+          setError(res.error.message ?? "Erreur lors de l'inscription");
+        } else {
+          onSuccess();
+        }
+      }
+    } catch {
+      setError('Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      {/* Background atmosphere */}
+      {/* Background */}
       <div className="absolute inset-0 pointer-events-none select-none">
         <div
           className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[150px]"
@@ -32,14 +75,57 @@ export default function AuthPage() {
         {/* Auth card */}
         <Card className="border-border/40 bg-card/80 backdrop-blur-sm !py-0">
           <CardContent className="!px-8 !py-8">
-            <Tabs value={view} onValueChange={(v) => setView(v as 'sign-in' | 'sign-up')} className="mb-8">
+            <Tabs
+              value={mode}
+              onValueChange={(v) => { setMode(v as 'sign-in' | 'sign-up'); setError(''); }}
+              className="mb-8"
+            >
               <TabsList className="w-full h-11">
                 <TabsTrigger value="sign-in" className="flex-1 text-sm">Connexion</TabsTrigger>
                 <TabsTrigger value="sign-up" className="flex-1 text-sm">Inscription</TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <AuthView pathname={view} />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nom@exemple.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  mode === 'sign-in' ? 'Se connecter' : "S'inscrire"
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
