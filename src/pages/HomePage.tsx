@@ -142,16 +142,14 @@ export default function HomePage({ onSignOut }: Props) {
           )}
 
           {/* Bottom CTA */}
-          <div className="fixed bottom-0 left-0 right-0 pb-8 pt-6 px-4 bg-gradient-to-t from-background via-background to-transparent">
-            <div className="max-w-[430px] mx-auto">
-              <Button
-                className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg"
-                onClick={() => setView({ type: 'create' })}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvel objectif
-              </Button>
-            </div>
+          <div className="mt-10 pb-10">
+            <Button
+              className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg"
+              onClick={() => setView({ type: 'create' })}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvel objectif
+            </Button>
           </div>
         </div>
       )}
