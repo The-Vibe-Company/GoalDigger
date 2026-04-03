@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { authClient } from '@/lib/auth';
+import { getSession, signOut } from '@/lib/auth';
 import AuthPage from '@/pages/AuthPage';
 import HomePage from '@/pages/HomePage';
 
@@ -8,26 +8,19 @@ export default function App() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const s = await authClient.getSession();
-        setSession(s.data?.session ?? null);
-      } catch {
-        setSession(null);
-      } finally {
-        setChecking(false);
-      }
-    };
-    checkSession();
+    getSession()
+      .then(s => setSession(s))
+      .catch(() => setSession(null))
+      .finally(() => setChecking(false));
   }, []);
 
   const handleAuthSuccess = async () => {
-    const s = await authClient.getSession();
-    setSession(s.data?.session ?? null);
+    const s = await getSession();
+    setSession(s);
   };
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
+  const handleSignOut = () => {
+    signOut();
     setSession(null);
   };
 

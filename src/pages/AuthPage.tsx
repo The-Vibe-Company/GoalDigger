@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authClient } from '@/lib/auth';
+import { signIn, signUp } from '@/lib/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -25,26 +25,13 @@ export default function AuthPage({ onSuccess }: Props) {
 
     try {
       if (mode === 'sign-in') {
-        const res = await authClient.signIn.email({ email, password });
-        if (res.error) {
-          setError(res.error.message ?? 'Erreur de connexion');
-        } else {
-          onSuccess();
-        }
+        await signIn(email, password);
       } else {
-        const res = await authClient.signUp.email({
-          name: email.split('@')[0] || 'User',
-          email,
-          password,
-        });
-        if (res.error) {
-          setError(res.error.message ?? "Erreur lors de l'inscription");
-        } else {
-          onSuccess();
-        }
+        await signUp(email, password);
       }
-    } catch {
-      setError('Une erreur est survenue');
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
