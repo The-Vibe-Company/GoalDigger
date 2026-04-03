@@ -30,8 +30,8 @@ export default function AuthPage() {
         </div>
 
         {/* Auth card */}
-        <Card className="border-border/40 bg-card/80 backdrop-blur-sm">
-          <CardContent className="p-8">
+        <Card className="border-border/40 bg-card/80 backdrop-blur-sm !py-0">
+          <CardContent className="!px-8 !py-8">
             <Tabs value={view} onValueChange={(v) => setView(v as 'sign-in' | 'sign-up')} className="mb-8">
               <TabsList className="w-full h-11">
                 <TabsTrigger value="sign-in" className="flex-1 text-sm">Connexion</TabsTrigger>
