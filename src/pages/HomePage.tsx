@@ -141,14 +141,18 @@ export default function HomePage({ onSignOut }: Props) {
             </div>
           )}
 
-          {/* FAB */}
-          <Button
-            className="fixed bottom-6 right-[calc(50%-191px)] h-12 w-12 rounded-full shadow-lg"
-            size="icon"
-            onClick={() => setView({ type: 'create' })}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+          {/* Bottom CTA */}
+          <div className="fixed bottom-0 left-0 right-0 pb-8 pt-6 px-4 bg-gradient-to-t from-background via-background to-transparent">
+            <div className="max-w-[430px] mx-auto">
+              <Button
+                className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg"
+                onClick={() => setView({ type: 'create' })}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvel objectif
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
