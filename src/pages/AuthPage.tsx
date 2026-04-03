@@ -3,6 +3,7 @@ import { AuthView } from '@neondatabase/neon-js/auth/react/ui';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Pickaxe } from 'lucide-react';
 
 export default function AuthPage() {
   const [view, setView] = useState<'sign-in' | 'sign-up'>('sign-in');
@@ -19,7 +20,6 @@ export default function AuthPage() {
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] blur-[100px]"
           style={{ background: 'radial-gradient(ellipse, oklch(0.75 0.15 85 / 0.03), transparent 70%)' }}
         />
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
@@ -34,7 +34,7 @@ export default function AuthPage() {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-card border border-border mb-4">
-            <span className="text-2xl">⛏️</span>
+            <Pickaxe className="w-7 h-7 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
             Goal<span className="text-primary">Digger</span>
