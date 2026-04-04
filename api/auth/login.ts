@@ -1,6 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sql } from '../_db';
-import { createToken } from '../_auth';
+import { neon } from '@neondatabase/serverless';
+import { SignJWT } from 'jose';
+
+const sql = neon(process.env.DATABASE_URL!);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+async function createToken(userId: string, email: string) {
+  return new SignJWT({ userId, email })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('30d')
+    .sign(secret);
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

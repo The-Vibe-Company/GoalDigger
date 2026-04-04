@@ -1,9 +1,21 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sql } from '../_db';
-import { verifyToken } from '../_auth';
+import { neon } from '@neondatabase/serverless';
+import { jwtVerify } from 'jose';
+
+const sql = neon(process.env.DATABASE_URL!);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+async function getUser(req: VercelRequest) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return null;
+  try {
+    const { payload } = await jwtVerify(header.slice(7), secret);
+    return { userId: payload.userId as string };
+  } catch { return null; }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const user = await verifyToken(req);
+  const user = await getUser(req);
   if (!user) return res.status(401).json({ error: 'Non authentifie' });
 
   const { goalId } = req.query;
@@ -18,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       WHERE goal_id = ${goalId as string}
       ORDER BY date ASC
     `;
-    // Normalize date to yyyy-MM-dd
     const entries = rows.map(r => ({
       date: (r.date as string).slice(0, 10),
       value: r.value,
@@ -30,7 +41,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     const { date, value, count } = req.body;
 
-    // Delete if count is 0 and no value
     if (count === 0 && (value === null || value === undefined)) {
       await sql`DELETE FROM entries WHERE goal_id = ${goalId as string} AND date = ${date}`;
       return res.json({ ok: true });
