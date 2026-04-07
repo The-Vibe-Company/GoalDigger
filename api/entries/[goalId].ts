@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ORDER BY date ASC
       `;
       const entries = rows.map(r => ({
-        date: (r.date as string).slice(0, 10),
+        date: (r.date instanceof Date ? r.date.toISOString() : String(r.date)).slice(0, 10),
         value: r.value,
         count: r.count,
       }));
