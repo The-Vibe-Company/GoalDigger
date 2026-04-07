@@ -13,7 +13,7 @@ import CurveTracker from '@/components/CurveTracker';
 import CounterTracker from '@/components/CounterTracker';
 import CalendarOverview from '@/components/CalendarOverview';
 import {
-  Pickaxe, LogOut, Plus, ArrowLeft, Trash2, Minus, Check, CalendarDays,
+  Pickaxe, Plus, ArrowLeft, Trash2, Minus, Check, CalendarDays,
   Scale, Coffee, Droplets, Cigarette, Wine, CupSoda, Hash, TrendingUp,
 } from 'lucide-react';
 
@@ -21,13 +21,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Scale, Coffee, Droplets, Cigarette, Wine, Cup: CupSoda, Hash, TrendingUp, Pickaxe,
 };
 
-interface Props {
-  onSignOut: () => void;
-}
-
 type View = { type: 'list' } | { type: 'create' } | { type: 'detail'; goalId: string } | { type: 'calendar' };
 
-export default function HomePage({ onSignOut }: Props) {
+export default function HomePage() {
   const [view, setView] = useState<View>({ type: 'list' });
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,9 +64,6 @@ export default function HomePage({ onSignOut }: Props) {
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView(v => v.type === 'calendar' ? { type: 'list' } : { type: 'calendar' })}>
             <CalendarDays className={`w-4 h-4 ${view.type === 'calendar' ? 'text-primary' : ''}`} />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSignOut}>
-            <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </header>

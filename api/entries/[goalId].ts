@@ -1,29 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { neon } from '@neondatabase/serverless';
-import { jwtVerify } from 'jose';
 
 const sql = neon(process.env.DATABASE_URL!);
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-
-async function getUser(req: VercelRequest) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  try {
-    const { payload } = await jwtVerify(header.slice(7), secret);
-    return { userId: payload.userId as string };
-  } catch { return null; }
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const user = await getUser(req);
-    if (!user) return res.status(401).json({ error: 'Non authentifie' });
-
     const goalId = Array.isArray(req.query.goalId) ? req.query.goalId[0] : req.query.goalId;
-
-    // Verify goal ownership
-    const goal = await sql`SELECT id FROM goals WHERE id = ${goalId as string} AND user_id = ${user.userId}`;
-    if (goal.length === 0) return res.status(404).json({ error: 'Objectif non trouve' });
 
     if (req.method === 'GET') {
       const rows = await sql`
