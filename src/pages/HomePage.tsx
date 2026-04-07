@@ -13,7 +13,7 @@ import CurveTracker from '@/components/CurveTracker';
 import CounterTracker from '@/components/CounterTracker';
 import CalendarOverview from '@/components/CalendarOverview';
 import {
-  Pickaxe, Plus, ArrowLeft, Trash2, Minus, Check, CalendarDays,
+  Pickaxe, LogOut, Plus, ArrowLeft, Trash2, Minus, Check, CalendarDays,
   Scale, Coffee, Droplets, Cigarette, Wine, CupSoda, Hash, TrendingUp,
 } from 'lucide-react';
 
@@ -23,7 +23,11 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 type View = { type: 'list' } | { type: 'create' } | { type: 'detail'; goalId: string } | { type: 'calendar' };
 
-export default function HomePage() {
+interface Props {
+  onSignOut: () => void;
+}
+
+export default function HomePage({ onSignOut }: Props) {
   const [view, setView] = useState<View>({ type: 'list' });
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,13 +61,16 @@ export default function HomePage() {
     <div className="min-h-dvh flex flex-col max-w-[430px] mx-auto px-4 pb-24">
       {/* Header */}
       <header className="flex items-center justify-between pt-6 pb-3">
-        <h1 className="text-lg font-bold tracking-tight flex items-center gap-1.5">
+        <h1 className="text-lg font-bold tracking-tight flex items-center gap-1.5 cursor-pointer" onClick={() => setView({ type: 'list' })}>
           Goal<span className="text-primary">Digger</span>
           <Pickaxe className="w-4 h-4 text-primary" />
         </h1>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView(v => v.type === 'calendar' ? { type: 'list' } : { type: 'calendar' })}>
             <CalendarDays className={`w-4 h-4 ${view.type === 'calendar' ? 'text-primary' : ''}`} />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onSignOut}>
+            <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </header>
