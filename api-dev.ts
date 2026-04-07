@@ -8,7 +8,8 @@ app.use(express.json());
 async function wrap(handlerPath: string) {
   const mod = await import(handlerPath);
   return (req: express.Request, res: express.Response) => {
-    // Map express req/res to Vercel-like shape (compatible enough)
+    // Map express params into query to match Vercel's req.query behavior
+    req.query = { ...req.query, ...req.params };
     mod.default(req, res);
   };
 }
