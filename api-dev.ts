@@ -8,8 +8,11 @@ app.use(express.json());
 async function wrap(handlerPath: string) {
   const mod = await import(handlerPath);
   return (req: express.Request, res: express.Response) => {
-    // Map express params into query to match Vercel's req.query behavior
-    req.query = { ...req.query, ...req.params };
+    // Vercel handlers read dynamic route params from req.query
+    // Express v5 makes req.query read-only, so we use a Proxy
+    const originalQuery = req.query;
+    const merged = { ...originalQuery, ...req.params };
+    Object.defineProperty(req, 'query', { value: merged, writable: true, configurable: true });
     mod.default(req, res);
   };
 }
